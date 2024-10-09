@@ -1,5 +1,10 @@
 'use client'
+import styled from '@emotion/styled'
+import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace'
+import LoadingButton from '@mui/lab/LoadingButton'
+import CheckIcon from '@mui/icons-material/Check'
 import {
+  Alert,
   Box,
   Button,
   Container,
@@ -11,17 +16,15 @@ import {
   TextField,
   Typography
 } from '@mui/material'
-import KeyboardBackspaceIcon from '@mui/icons-material/KeyboardBackspace'
-import React, { useState } from 'react'
-import { LocalizationProvider, DateTimePicker } from '@mui/x-date-pickers'
+import { DateTimePicker, LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs'
-import styled from '@emotion/styled'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 const StyledInput = styled(TextField)({
   '& input[type="number"]': {
-    '-moz-appearance': 'textfield'
+    MozAppearance: 'textfield' // Sử dụng camelCase
   },
   '& input[type="number"]::-webkit-outer-spin-button, & input[type="number"]::-webkit-inner-spin-button':
     {
@@ -37,13 +40,30 @@ interface IUpdateFormPayload {
   unitPrice: number
 }
 
+const PALLER_OPTIONS = [
+  {
+    value: '1',
+    label: '1'
+  },
+  {
+    value: '2',
+    label: '2'
+  },
+  {
+    value: '3',
+    label: '3'
+  }
+]
+
 export default function Home() {
   const {
     register,
     handleSubmit,
     setValue,
     formState: { errors }
-  } = useForm()
+  } = useForm<IUpdateFormPayload>()
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [message, setMessage] = useState<string>('')
 
   const onSubmit = (data: IUpdateFormPayload) => {
     if (data.dateTime) {
@@ -52,12 +72,29 @@ export default function Home() {
         'DD/MM/YYYY HH:mm:ss'
       )
       const payload = { ...data, dateTime: formatedDateTime }
-      console.log('🚀payload---->', payload)
+
+      // Call Api
+      setIsLoading(true)
+      try {
+        console.log('🚀payload---->', payload)
+        setMessage('You are updated successfully')
+      } catch (error: any) {
+        console.log('🚀error---->', error)
+      } finally {
+        setTimeout(() => {
+          setIsLoading(false)
+        }, 2000)
+      }
     }
   }
 
   return (
     <main className='min-h-screen'>
+      {message && (
+        <Alert icon={<CheckIcon fontSize='inherit' />} severity='success'>
+          {message}
+        </Alert>
+      )}
       <Container
         sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       >
@@ -91,17 +128,17 @@ export default function Home() {
               </Typography>
             </Box>
             <Box>
-              <Button
+              <LoadingButton
                 variant='contained'
                 sx={{ borderRadius: 3, textTransform: 'none' }}
                 type='submit'
+                loading={isLoading}
               >
                 Cập nhật
-              </Button>
+              </LoadingButton>
             </Box>
           </Box>
           <Box
-            component='form'
             sx={{
               display: 'flex',
               flexDirection: 'column',
@@ -113,7 +150,7 @@ export default function Home() {
                 <DateTimePicker
                   label='Thời gian'
                   onChange={(newValue) =>
-                    newValue && setValue('dateTime', newValue)
+                    newValue && setValue('dateTime', newValue as any)
                   }
                   slots={{
                     textField: (textFieldProps) => (
@@ -128,8 +165,11 @@ export default function Home() {
                   }}
                 />
               </LocalizationProvider>
-              <FormHelperText>{errors?.dateTime?.message || ''}</FormHelperText>
+              <FormHelperText>
+                {errors.dateTime?.message || null}
+              </FormHelperText>
             </FormControl>
+
             <FormControl error={!!errors.quantity}>
               <StyledInput
                 label='Số lượng'
@@ -137,9 +177,16 @@ export default function Home() {
                 {...register('quantity', {
                   required: 'Số lượng không được để trống'
                 })}
+                InputProps={{
+                  inputProps: {
+                    step: '0.01',
+                    min: '0'
+                  }
+                }}
               />
-              <FormHelperText>{errors?.quantity?.message || ''}</FormHelperText>
+              <FormHelperText>{errors.quantity?.message}</FormHelperText>
             </FormControl>
+
             <FormControl fullWidth>
               <InputLabel id='paller-select-label'>Trụ</InputLabel>
               <Select
@@ -149,15 +196,22 @@ export default function Home() {
                 {...register('paller', {
                   required: 'Trụ không được để trống'
                 })}
+                defaultValue={''}
               >
-                <MenuItem value={1}>1</MenuItem>
-                <MenuItem value={2}>2</MenuItem>
-                <MenuItem value={3}>3</MenuItem>
+                <MenuItem value=''>
+                  <em>Chọn trụ</em>
+                </MenuItem>
+                {PALLER_OPTIONS.map((item, index) => (
+                  <MenuItem key={index} value={item.value}>
+                    {item.label}
+                  </MenuItem>
+                ))}
               </Select>
               <FormHelperText sx={{ color: 'red' }}>
-                {errors?.paller?.message || ''}
+                {errors.paller?.message}
               </FormHelperText>
             </FormControl>
+
             <FormControl error={!!errors.revenue}>
               <StyledInput
                 label='Doanh thu'
@@ -166,7 +220,7 @@ export default function Home() {
                   required: 'Doanh thu không được để trống'
                 })}
               />
-              <FormHelperText>{errors?.revenue?.message || ''}</FormHelperText>
+              <FormHelperText>{errors.revenue?.message}</FormHelperText>
             </FormControl>
 
             <FormControl error={!!errors.unitPrice}>
@@ -177,9 +231,7 @@ export default function Home() {
                   required: 'Đơn giá không được để trống'
                 })}
               />
-              <FormHelperText>
-                {errors?.unitPrice?.message || ''}
-              </FormHelperText>
+              <FormHelperText>{errors.unitPrice?.message}</FormHelperText>
             </FormControl>
           </Box>
         </Box>
