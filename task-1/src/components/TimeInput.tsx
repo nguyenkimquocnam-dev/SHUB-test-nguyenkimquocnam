@@ -1,4 +1,3 @@
-import React, { useState } from 'react'
 import TextField from '@mui/material/TextField'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
@@ -17,7 +16,9 @@ const TimeInput = ({ label = '', selectedTime, onTimeChange }: Props) => {
         label={label}
         value={selectedTime}
         onChange={(newValue) => onTimeChange(newValue)}
-        renderInput={(params) => <TextField {...params} />}
+        slots={{
+          textField: (textFieldProps) => <TextField {...textFieldProps} />
+        }}
         ampm={false}
       />
     </LocalizationProvider>
