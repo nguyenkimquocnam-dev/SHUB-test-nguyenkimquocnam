@@ -99,7 +99,7 @@ export default function Home() {
         sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       >
         <Box
-          sx={{ padding: '40px 0', minWidth: '400px', maxWidth: '500px' }}
+          sx={{ padding: '40px 0', minWidth: '450px', maxWidth: '500px' }}
           component='form'
           onSubmit={handleSubmit(onSubmit)}
         >
